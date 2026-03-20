@@ -1,0 +1,14 @@
+# dbt/profiles.yml
+my_portfolio_project:
+  outputs:
+    prod:
+      type: bigquery
+      method: service-account-json
+      # GitHub Actionsの環境変数から読み込む設定
+      keyfile_json: "{{ env_var('GCP_SA_KEY_JSON') }}"
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "{{ env_var('BQ_DATASET_ID') }}"
+      threads: 1
+      priority: interactive
+      location: asia-northeast1
+  target: prod

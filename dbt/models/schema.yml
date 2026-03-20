@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: raw_api
+    database: your-gcp-project-id  # プロジェクトID
+    schema: api_encrypted_store    # データセット名
+    tables:
+      - name: raw_data
+        columns:
+          - name: id
+            tests:
+              - not_null
+              - unique
+          - name: encrypted_content
+            tests:
+              - not_null

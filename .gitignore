@@ -1,0 +1,24 @@
+# Terraform (インフラ状態管理ファイルはGitに入れない)
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+
+# Python (実行時のキャッシュや環境)
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# dbt (実行ログや生成されたコンパイル後のSQL)
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Security (GCPの鍵などのJSONファイルは絶対禁止)
+*.json
+.gcp/
+
+# OS固有
+.DS_Store

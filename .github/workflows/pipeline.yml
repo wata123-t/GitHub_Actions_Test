@@ -1,0 +1,59 @@
+name: 'End-to-End Data Pipeline'
+
+on:
+  push:
+    branches: [ "main" ] # mainブランチへのpushで起動
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    
+    # 全ステップで共通して使う環境変数
+    env:
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }} # Terraform用
+      GCP_SA_KEY_JSON: ${{ secrets.GCP_SA_KEY }}    # dbt用
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      AES_ENCRYPT_KEY: ${{ secrets.AES_ENCRYPT_KEY }}
+      BQ_DATASET_ID: "api_encrypted_store"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- 1. インフラ構築 (Terraform) ---
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init & Apply
+        run: |
+          terraform init
+          terraform apply -auto-approve -var="project_id=${{ env.GCP_PROJECT_ID }}"
+        working-directory: ./terraform
+
+      # --- 2. Python 環境構築 & テスト (pytest) ---
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest dbt-bigquery
+
+      - name: Run Pytest
+        run: pytest tests/
+
+      # --- 3. データ取得・暗号化・ロード (Python) ---
+      - name: Run Python Script
+        run: python src/main.py
+
+      # --- 4. データ変換・品質チェック (dbt) ---
+      - name: Run dbt
+        run: |
+          dbt deps
+          dbt run
+          dbt test
+        working-directory: ./dbt
+        env:
+          DBT_PROFILES_DIR: "." # 自分のフォルダ内のprofiles.ymlを使う
