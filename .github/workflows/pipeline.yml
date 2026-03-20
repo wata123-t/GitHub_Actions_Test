@@ -55,7 +55,9 @@ jobs:
           pip install pytest dbt-bigquery
 
       - name: Run Pytest
-        run: pytest tests/
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          pytest tests/
 
       # --- 3. データ取得・暗号化・ロード (Python) ---
       - name: Run Python Script
