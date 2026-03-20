@@ -14,7 +14,7 @@ jobs:
       GCP_SA_KEY_JSON: ${{ secrets.GCP_SA_KEY }}    # dbt用
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       AES_ENCRYPT_KEY: ${{ secrets.AES_ENCRYPT_KEY }}
-      BQ_DATASET_ID: "api_encrypted_store"
+      BQ_DATASET_ID: "portfolio_dataset"
 
     steps:
       - name: Checkout code
@@ -68,16 +68,12 @@ jobs:
           # 1. 鍵ファイルを一時的に作成
           echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
           export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json
-          
-          # 2. 実行
           python src/main.py
-          
-          # 3. 終わったら鍵ファイルを削除
           rm gcp-key.json
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           AES_ENCRYPT_KEY: ${{ secrets.AES_ENCRYPT_KEY }}
-          BQ_DATASET_ID: "api_encrypted_store"
+          BQ_DATASET_ID: "portfolio_dataset"
 
       # --- 4. データ変換・品質チェック (dbt) ---
       - name: Run dbt
@@ -94,5 +90,5 @@ jobs:
         working-directory: ./dbt
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          BQ_DATASET_ID: "api_encrypted_store"
+          BQ_DATASET_ID: "portfolio_dataset"
           DBT_PROFILES_DIR: "."

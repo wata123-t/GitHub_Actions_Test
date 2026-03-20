@@ -1,9 +1,11 @@
+# dbt/models/schema.yml
 version: 2
 
 sources:
   - name: raw_api
-    database: your-gcp-project-id  # プロジェクトID
-    schema: api_encrypted_store    # データセット名
+    # 環境変数からプロジェクトIDを読み込むように変更
+    database: "{{ env_var('GCP_PROJECT_ID') }}" 
+    schema: portfolio_dataset
     tables:
       - name: raw_data
         columns:
