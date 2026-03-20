@@ -20,15 +20,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+     ####################################################
       # --- 1. インフラ構築 (Terraform) ---
+     ####################################################
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-
+        
+     ####################################################
       - name: Terraform Init & Apply
-#        run: |
-#          terraform init
-#          terraform apply -auto-approve -var="project_id=${{ env.GCP_PROJECT_ID }}"
-#        working-directory: ./terraform
+     ####################################################
 
         run: |
           # 1. 鍵ファイルを一時的に作成
@@ -43,7 +43,9 @@ jobs:
           rm gcp-key.json
         working-directory: ./terraform
 
+     ####################################################
       # --- 2. Python 環境構築 & テスト (pytest) ---
+     ####################################################
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -54,6 +56,7 @@ jobs:
           pip install -r requirements.txt
           pip install pytest dbt-bigquery
 
+      # --- 2.5 テストの実行 (ここを追加！) ---
       - name: Run Pytest
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
@@ -61,14 +64,35 @@ jobs:
 
       # --- 3. データ取得・暗号化・ロード (Python) ---
       - name: Run Python Script
-        run: python src/main.py
+        run: |
+          # 1. 鍵ファイルを一時的に作成
+          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json
+          
+          # 2. 実行
+          python src/main.py
+          
+          # 3. 終わったら鍵ファイルを削除
+          rm gcp-key.json
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          AES_ENCRYPT_KEY: ${{ secrets.AES_ENCRYPT_KEY }}
+          BQ_DATASET_ID: "api_encrypted_store"
 
       # --- 4. データ変換・品質チェック (dbt) ---
       - name: Run dbt
         run: |
+          # dbtも同様に鍵ファイルが必要
+          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
+          export GCP_SA_KEY_JSON=$(pwd)/gcp-key.json
+          
           dbt deps
           dbt run
           dbt test
+          
+          rm gcp-key.json
         working-directory: ./dbt
         env:
-          DBT_PROFILES_DIR: "." # 自分のフォルダ内のprofiles.ymlを使う
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          BQ_DATASET_ID: "api_encrypted_store"
+          DBT_PROFILES_DIR: "."
