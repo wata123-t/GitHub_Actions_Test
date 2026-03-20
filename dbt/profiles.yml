@@ -1,12 +1,13 @@
 # dbt/profiles.yml
+
 my_portfolio_project:
   outputs:
     prod:
       type: bigquery
-      method: service-account-json
-      keyfile: "gcp-key.json" 
+      method: service-account
+      keyfile: "gcp-key.json"
       project: "{{ env_var('GCP_PROJECT_ID') }}"
-      dataset: "{{ env_var('BQ_DATASET_ID') }}"
+      dataset: "portfolio_dataset"
       threads: 1
       priority: interactive
       location: asia-northeast1

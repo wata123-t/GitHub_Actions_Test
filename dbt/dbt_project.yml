@@ -1,11 +1,10 @@
 # dbt/dbt_project.yml
 
 name: 'my_portfolio'
-profile: 'my_portfolio_project'  # ← ここで「どの接続設定を使うか」を指定
 version: '1.0.0'
 config-version: 2
 
-# profiles.yml で設定した名前と一致させる必要があります
+# ここで「どの接続設定(profiles.ymlの項目)」を使うか一回だけ指定
 profile: 'my_portfolio_project'
 
 # モデル（SQLファイル）を探すディレクトリ
@@ -16,12 +15,10 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
-# モデルの実行設定（テーブルとして作るか、ビューとして作るか）
+# モデルの実行設定
 models:
   my_portfolio:
-    # models/ フォルダ内のデフォルト設定
     materialized: view
-    # 特定のフォルダだけテーブルにする設定も可能
     staging:
       materialized: view
     marts:
