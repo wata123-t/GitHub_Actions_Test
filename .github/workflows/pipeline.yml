@@ -78,14 +78,15 @@ jobs:
       # --- 4. データ変換・品質チェック (dbt) ---
       - name: Run dbt
         run: |
-          # dbtも同様に鍵ファイルが必要
+          # 1. dbtディレクトリ内に鍵ファイルを作成
           echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
-          export GCP_SA_KEY_JSON=$(pwd)/gcp-key.json
           
+          # 2. 実行
           dbt deps
           dbt run
           dbt test
           
+          # 3. 削除
           rm gcp-key.json
         working-directory: ./dbt
         env:
