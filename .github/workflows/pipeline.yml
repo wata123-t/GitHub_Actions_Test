@@ -25,9 +25,22 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init & Apply
+#        run: |
+#          terraform init
+#          terraform apply -auto-approve -var="project_id=${{ env.GCP_PROJECT_ID }}"
+#        working-directory: ./terraform
+
         run: |
+          # 1. 鍵ファイルを一時的に作成
+          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json
+          
+          # 2. 実行
           terraform init
           terraform apply -auto-approve -var="project_id=${{ env.GCP_PROJECT_ID }}"
+          
+          # 3. 終わったら鍵ファイルを削除（セキュリティのため）
+          rm gcp-key.json
         working-directory: ./terraform
 
       # --- 2. Python 環境構築 & テスト (pytest) ---
